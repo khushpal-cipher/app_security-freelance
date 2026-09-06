@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block title %}AuthFlow report — {{ result.base_url }}{% endblock %}
+{% block content %}
+<div class="meta">
+  Tested <strong>{{ result.base_url }}</strong> &middot;
+  {{ result.endpoints_tested }} endpoint{{ 's' if result.endpoints_tested != 1 else '' }}
+</div>
+
+{% set critical = result.findings | selectattr("severity.value", "equalto", "critical") | list %}
+{% if not critical %}
+  <div class="card"><p class="empty">No auth-bypass or inverted-policy findings — every protected endpoint correctly rejected the unauthenticated request.</p></div>
+{% endif %}
+
+{% for f in result.findings %}
+<div class="finding {{ f.severity.value }}">
+  <span class="badge {{ f.severity.value }}">{{ f.classification.value.replace('_', ' ') }}</span>
+  <span class="route">{{ f.method.value }} {{ f.path }}</span>
+  <div class="reason">{{ f.reason }}</div>
+  {% if f.classification.value not in ("skipped", "info") %}
+  <div class="counts">
+    anon: HTTP {{ f.anon.status_code if f.anon.status_code is not none else "—" }}, {{ f.anon.record_count if f.anon.record_count is not none else "?" }} record(s) &middot;
+    authed: HTTP {{ f.authed.status_code if f.authed.status_code is not none else "—" }}, {{ f.authed.record_count if f.authed.record_count is not none else "?" }} record(s)
+  </div>
+  {% endif %}
+  {% if f.fix_prompt %}
+  <div class="fix"><strong>Fix prompt:</strong> {{ f.fix_prompt }}</div>
+  {% endif %}
+</div>
+{% endfor %}
+
+<div style="margin-top:32px;"><a href="/">&larr; New verification</a></div>
+{% endblock %}

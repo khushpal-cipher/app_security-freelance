@@ -1,0 +1,30 @@
+# Endpoint spec for AuthFlow-Verifier.
+# expects_auth: true  -> anon must be rejected (401/403); anon succeeding or
+#                        out-seeing the authed user is flagged critical.
+# expects_auth: false -> recorded as a baseline only, no pass/fail judgement.
+#
+# Write methods (POST/PUT/PATCH/DELETE) are skipped unless the request sets
+# allow_write: true AND the endpoint below sets zero_match_filter to a query
+# param guaranteed to match no real record.
+
+endpoints:
+  - path: /api/public/health
+    method: GET
+    expects_auth: false
+
+  - path: /api/users/me
+    method: GET
+    expects_auth: true
+
+  - path: /api/admin/users
+    method: GET
+    expects_auth: true
+
+  - path: /api/orders
+    method: GET
+    expects_auth: true
+
+  - path: /api/users/42
+    method: DELETE
+    expects_auth: true
+    zero_match_filter: "id=999999999"

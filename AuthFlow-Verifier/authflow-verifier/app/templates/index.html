@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card">
+  <p>Runs the same request set as an anonymous visitor and as a logged-in user, then flags any
+  endpoint where the anonymous request succeeds, or sees more data, than the authenticated one.</p>
+  <form action="/verify/report" method="post">
+    <label for="base_url">Base URL</label>
+    <input type="url" id="base_url" name="base_url" placeholder="http://127.0.0.1:8001" required value="{{ prefill.base_url if prefill else '' }}">
+
+    <label for="user_token">Valid user token</label>
+    <input type="text" id="user_token" name="user_token" placeholder="a currently-active user JWT/bearer token" required value="{{ prefill.user_token if prefill else '' }}">
+
+    <label for="endpoints_yaml">Endpoint spec (YAML)</label>
+    <textarea id="endpoints_yaml" name="endpoints_yaml" required>{{ prefill.endpoints_yaml if prefill else default_yaml }}</textarea>
+
+    <div class="checkbox-row">
+      <input type="checkbox" id="allow_write" name="allow_write" value="true" {{ "checked" if prefill and prefill.allow_write }}>
+      <label for="allow_write" style="margin:0;">Allow write-method tests (requires zero_match_filter per endpoint)</label>
+    </div>
+
+    <button type="submit">Verify</button>
+  </form>
+</div>
+{% if error %}
+<div class="card" style="border-color:#b3261e;color:#b3261e;">{{ error }}</div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block title %}Scan report — {{ result.url }}{% endblock %}
+{% block content %}
+<div class="meta">
+  Scanned <strong>{{ result.url }}</strong> &middot;
+  {{ result.assets_scanned }} asset{{ 's' if result.assets_scanned != 1 else '' }} &middot;
+  {{ "%.1f"|format(result.bytes_scanned / 1024) }} KB downloaded
+</div>
+
+{% if not result.findings %}
+  <div class="card"><p class="empty">No secrets detected in the scanned assets.</p></div>
+{% else %}
+  {% for f in result.findings %}
+  <div class="finding {{ f.severity.value }}">
+    <span class="badge {{ f.severity.value }}">{{ f.severity.value }}</span>
+    <span class="provider">{{ f.provider }}</span>
+    <div><span class="snippet">{{ f.snippet_masked }}</span></div>
+    <div class="reason">{{ f.reason }}</div>
+    <div class="location">{{ f.location }}</div>
+  </div>
+  {% endfor %}
+{% endif %}
+
+{% if result.errors %}
+<div class="errors">
+  <strong>Notes:</strong>
+  <ul>{% for e in result.errors %}<li>{{ e }}</li>{% endfor %}</ul>
+</div>
+{% endif %}
+
+<div style="margin-top:32px;"><a href="/">&larr; New scan</a></div>
+{% endblock %}

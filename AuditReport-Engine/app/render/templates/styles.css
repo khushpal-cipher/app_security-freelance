@@ -1,0 +1,249 @@
+@page {
+  size: Letter;
+  margin: 2.2cm 1.8cm 2.2cm 1.8cm;
+  @bottom-center {
+    content: counter(page) " / " counter(pages);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    font-size: 9pt;
+    color: #6b7280;
+  }
+}
+
+@page cover {
+  margin: 0;
+  @bottom-center { content: none; }
+}
+
+* { box-sizing: border-box; }
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+  color: #141413;
+  font-size: 10.5pt;
+  line-height: 1.55;
+  margin: 0;
+}
+
+:root {
+  --critical: #DC2626;
+  --high: #EA580C;
+  --medium: #CA8A04;
+  --low: #2563EB;
+  --dark: #141413;
+  --light: #faf9f5;
+  --accent: #d97757;
+}
+
+h1, h2, h3 { font-weight: 700; color: var(--dark); }
+h1 { font-size: 22pt; margin: 0 0 6pt; }
+h2 { font-size: 15pt; margin: 0 0 12pt; padding-bottom: 6pt; border-bottom: 2px solid var(--dark); }
+h3 { font-size: 12pt; margin: 0 0 4pt; }
+p { margin: 0 0 8pt; }
+
+/* ---- Cover page ---- */
+.cover {
+  page: cover;
+  page-break-after: always;
+  background: var(--dark);
+  color: var(--light);
+  height: 100vh;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 3cm 2.2cm;
+}
+.cover .brand {
+  font-size: 11pt;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--accent);
+  font-weight: 700;
+}
+.cover .title-block h1 {
+  color: var(--light);
+  font-size: 32pt;
+  margin-bottom: 10pt;
+}
+.cover .title-block .assessment-name {
+  font-size: 16pt;
+  color: #d4d4d1;
+  margin-bottom: 4pt;
+}
+.cover .meta-block {
+  font-size: 10pt;
+  color: #a8a7a2;
+  border-top: 1px solid #3a3a38;
+  padding-top: 14pt;
+}
+.cover .meta-block div { margin-bottom: 3pt; }
+.cover .confidential {
+  display: inline-block;
+  margin-top: 14pt;
+  padding: 3pt 10pt;
+  border: 1px solid var(--accent);
+  color: var(--accent);
+  font-size: 8.5pt;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+/* ---- Section wrapper ---- */
+section { page-break-before: always; }
+section:first-of-type { page-break-before: avoid; }
+
+/* ---- Executive summary ---- */
+.risk-statement {
+  background: var(--light);
+  border-left: 4px solid var(--accent);
+  padding: 14pt 16pt;
+  margin-bottom: 16pt;
+  font-size: 11pt;
+}
+.severity-counts {
+  display: flex;
+  gap: 10pt;
+  margin-bottom: 16pt;
+}
+.count-card {
+  flex: 1;
+  border-radius: 6pt;
+  padding: 12pt;
+  text-align: center;
+  color: white;
+}
+.count-card .n { font-size: 22pt; font-weight: 700; display: block; }
+.count-card .label { font-size: 8.5pt; text-transform: uppercase; letter-spacing: 0.05em; }
+.count-card.critical { background: var(--critical); }
+.count-card.high { background: var(--high); }
+.count-card.medium { background: var(--medium); }
+.count-card.low { background: var(--low); }
+
+/* ---- Findings table ---- */
+table.findings-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 9.5pt;
+  margin-bottom: 10pt;
+}
+table.findings-table th {
+  text-align: left;
+  background: var(--dark);
+  color: var(--light);
+  padding: 7pt 8pt;
+  font-size: 8.5pt;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+table.findings-table td {
+  padding: 7pt 8pt;
+  border-bottom: 1px solid #e5e5e3;
+  vertical-align: top;
+}
+table.findings-table tr:nth-child(even) td { background: #faf9f5; }
+
+.badge {
+  display: inline-block;
+  padding: 2pt 8pt;
+  border-radius: 3pt;
+  color: white;
+  font-size: 8pt;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+.badge.critical { background: var(--critical); }
+.badge.high { background: var(--high); }
+.badge.medium { background: var(--medium); }
+.badge.low { background: var(--low); }
+
+/* ---- Finding detail cards ---- */
+.finding-card {
+  border: 1px solid #e5e5e3;
+  border-left-width: 5pt;
+  border-radius: 4pt;
+  padding: 12pt 14pt;
+  margin-bottom: 14pt;
+  page-break-inside: avoid;
+}
+.finding-card.critical { border-left-color: var(--critical); }
+.finding-card.high { border-left-color: var(--high); }
+.finding-card.medium { border-left-color: var(--medium); }
+.finding-card.low { border-left-color: var(--low); }
+
+.finding-card .header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 8pt;
+}
+.finding-card .score {
+  font-size: 9pt;
+  color: #6b7280;
+  white-space: nowrap;
+}
+.finding-card .field-label {
+  font-size: 8pt;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #6b7280;
+  margin-top: 8pt;
+  margin-bottom: 2pt;
+}
+.finding-card .meta-row {
+  font-size: 9pt;
+  color: #6b7280;
+  margin-bottom: 6pt;
+}
+.finding-card code, .fix-prompt-box code {
+  background: #f0f0ee;
+  padding: 1pt 4pt;
+  border-radius: 3pt;
+  font-family: "SF Mono", Menlo, Consolas, monospace;
+  font-size: 9pt;
+}
+
+/* ---- Appendix ---- */
+.fix-prompt-box {
+  background: var(--light);
+  border: 1px solid #e5e5e3;
+  border-radius: 4pt;
+  padding: 10pt 12pt;
+  margin-bottom: 12pt;
+  page-break-inside: avoid;
+}
+.fix-prompt-box h3 { font-size: 10.5pt; margin-bottom: 4pt; }
+.fix-prompt-box pre {
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  font-family: "SF Mono", Menlo, Consolas, monospace;
+  font-size: 9pt;
+  background: #f0f0ee;
+  padding: 8pt;
+  border-radius: 3pt;
+  margin: 4pt 0 0;
+}
+
+/* ---- Scope / limitations ---- */
+.scope-columns {
+  display: flex;
+  gap: 20pt;
+  margin-bottom: 16pt;
+}
+.scope-columns .col { flex: 1; }
+.scope-columns ul { margin: 0; padding-left: 16pt; }
+.scope-columns li { margin-bottom: 4pt; }
+.disclaimer {
+  font-size: 9pt;
+  color: #6b7280;
+  border-top: 1px solid #e5e5e3;
+  padding-top: 10pt;
+  margin-top: 10pt;
+}
+
+.empty-state {
+  text-align: center;
+  color: #6b7280;
+  padding: 40pt 0;
+  font-size: 11pt;
+}

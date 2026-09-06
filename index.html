@@ -1,0 +1,883 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Khushpal Singh Chouhan — Application Security Engineer, Pune</title>
+<meta name="description" content="Freelance application security engineer in Pune. I audit apps that were shipped fast — leaked keys, exposed database tables, checkouts that trust the browser — and hand back the fix, not just the finding.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800&family=Lora:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    /* ---- Near-black canvas, warm clay panels top and bottom ---- */
+    --canvas:#141413;
+    --ink:#FAF9F5;
+    --muted:#8A8880;
+    --rule:#2C2C2A;
+    --accent:#D97757;          /* warm clay — carries the hero and contact panels */
+    --dark:#141413;            /* work band matches the canvas: no seam */
+    --dark-ink:#FAF9F5;
+    /* the screenshot cards stay light on purpose — they are browser windows,
+       not site chrome, and they give the stack its contrast against the page */
+    --paper:#F2F0EA;
+    --paper-bar:#E5E2D9;
+    --paper-rule:#D6D3C9;
+    --paper-muted:#5A5750;
+    --field:#3A3A36;           /* form field hairline, retinted on the clay panels */
+    --display:'Archivo', Helvetica, Arial, sans-serif;
+    --body:'Lora', Georgia, 'Times New Roman', serif;
+    --gutter:clamp(20px, 5vw, 76px);
+    --bar:36px;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; background:var(--canvas); color:var(--ink);
+    font-family:var(--body); font-size:17px; line-height:1.62;
+    -webkit-font-smoothing:antialiased; text-rendering:optimizeLegibility;
+  }
+  a{color:inherit;}
+  :focus-visible{outline:2px solid var(--ink); outline-offset:3px;}
+
+  /* small caps label, used for every piece of meta type on the page */
+  .label{
+    font-family:var(--display); font-weight:500; font-size:12px;
+    letter-spacing:.11em; text-transform:uppercase;
+  }
+
+  /* ---------- masthead ---------- */
+  /* floating glass bar — the page is one dark canvas now, so it never flips */
+  .masthead{
+    position:fixed; z-index:80;
+    top:14px; left:var(--gutter); right:var(--gutter);
+    display:flex; justify-content:space-between; align-items:center;
+    gap:24px; padding:12px 12px 12px 22px;
+    border-radius:999px; color:var(--ink);
+    background:rgba(20,20,19,.62);   /* translucent: the panel behind tints the bar */
+    -webkit-backdrop-filter:blur(20px) saturate(180%);
+    backdrop-filter:blur(20px) saturate(180%);
+    border:1px solid rgba(250,249,245,.14);
+    box-shadow:0 10px 34px -14px rgba(0,0,0,.7),
+               inset 0 1px 0 rgba(250,249,245,.08);
+  }
+  .masthead a{
+    text-decoration:none; font-family:var(--display);
+    font-weight:600; font-size:13px; letter-spacing:.06em;
+  }
+  .masthead nav{display:flex; gap:6px; align-items:center;}
+  .masthead nav a{
+    padding:8px 16px; border-radius:999px;
+    transition:background .25s ease;
+  }
+  .masthead nav a:hover{background:rgba(250,249,245,.12);}
+  @media (prefers-reduced-motion:reduce){ .masthead nav a{transition:none;} }
+  @media (max-width:620px){ .masthead nav a.hide-sm{display:none;} }
+
+  /* ---------- the two clay panels: hero and contact ----------
+     Warm clay carries the top and the bottom of the page; the middle
+     (about, work, reviews) stays on the near-black canvas. Everything below
+     is written against the tokens, so re-pointing them here retints the
+     whole panel — type, rules, fields, buttons — in one place. */
+  .hero, .contact{
+    background:#D97757;                /* literal: --accent is redefined below */
+    --canvas:#D97757;                  /* so inverted fills read clay-on-black */
+    --ink:#141413;
+    --muted:rgba(20,20,19,.78);
+    --rule:rgba(20,20,19,.26);
+    --field:rgba(20,20,19,.40);
+    --accent:#141413;                  /* the "accent" on clay is the ink */
+    color:var(--ink);
+  }
+  .hero ::selection, .contact ::selection{background:#141413; color:#D97757;}
+
+  /* ---------- hero ---------- */
+  .hero{
+    min-height:100vh; padding:0 var(--gutter) 60px;
+    display:flex; flex-direction:column; justify-content:flex-end;
+    border-bottom:1px solid var(--rule);
+  }
+  /* sized so the longest phrase ("Khushpal Singh Chouhan" = 12.55em + caret)
+     always fits on one line — the typed line never reflows, so the caret
+     never hops and nothing below it moves. */
+  .hero-type{
+    font-family:var(--display); font-weight:800;
+    font-size:clamp(1.4rem, 7vw, 6.3rem);
+    line-height:1.02; letter-spacing:-.038em;
+    margin:0 0 18px; min-height:1.02em;
+    white-space:nowrap; max-width:none;
+  }
+  .caret{
+    display:inline-block; width:.055em; height:.84em;
+    background:var(--accent); vertical-align:-.04em;
+    margin-left:.07em; animation:blink 1.05s steps(1) infinite;
+  }
+  @keyframes blink{50%{opacity:0;}}
+  .hero-pitch{
+    margin:0 0 34px; color:var(--muted);
+    font-family:var(--display); font-weight:500; font-size:14px;
+    letter-spacing:.1em; text-transform:uppercase;
+  }
+  .hero-foot{
+    display:flex; flex-wrap:wrap; gap:34px 72px;
+    align-items:flex-end; justify-content:space-between;
+    border-top:1px solid var(--rule); padding-top:26px;
+  }
+  .hero-foot p{margin:0; max-width:48ch; font-size:1.06rem; color:var(--muted);}
+  .hero-foot p strong{color:var(--ink); font-weight:500;}
+  .avail{
+    display:flex; align-items:center; gap:10px;
+    white-space:nowrap; color:var(--muted);
+  }
+  /* the availability dot */
+  .avail i{
+    width:8px; height:8px; border-radius:50%;
+    background:var(--accent); display:block;
+    box-shadow:0 0 0 4px rgba(20,20,19,.18);
+  }
+
+  /* ---------- section heads ---------- */
+  .section-head{
+    padding:96px var(--gutter) 30px;
+    display:flex; justify-content:space-between; align-items:baseline; gap:24px;
+    border-bottom:1px solid var(--rule);
+  }
+  .section-head h2{
+    font-family:var(--display); font-weight:700;
+    font-size:clamp(1.4rem,2.9vw,2rem); letter-spacing:-.02em; margin:0;
+  }
+  .section-head .label{color:var(--muted);}
+
+  /* ---------- about ---------- */
+  .about{
+    padding:52px var(--gutter) 0;
+    display:grid; grid-template-columns:repeat(12,1fr); gap:32px;
+  }
+  .about-lede{
+    grid-column:1 / span 7; margin:0;
+    font-size:clamp(1.25rem,2.5vw,1.85rem); line-height:1.4; letter-spacing:-.006em;
+  }
+  .about-list{grid-column:9 / span 4; margin:.5rem 0 0; padding:0; list-style:none;}
+  .about-list li{
+    display:flex; justify-content:space-between; gap:18px;
+    padding:12px 0; border-top:1px solid var(--rule);
+    font-family:var(--display); font-size:14px;
+  }
+  .about-list li span:last-child{color:var(--muted); text-align:right;}
+  @media (max-width:860px){ .about-lede,.about-list{grid-column:1 / -1;} }
+
+  /* ================= WORK ================= */
+  .work-head{
+    margin-top:96px; padding:30px var(--gutter) 26px;
+    background:var(--dark); color:var(--dark-ink);
+    border-top:1px solid var(--rule); border-bottom:1px solid var(--rule);
+  }
+  .work-head .label{color:var(--muted);}
+
+  .work-track{position:relative;}
+  .work-stage{
+    position:sticky; top:0;
+    height:100vh; overflow:hidden;
+    background:var(--dark); color:var(--dark-ink);
+  }
+  /* structure, not gradient mush: a fine editorial column grid */
+  .work-stage::before{
+    content:''; position:absolute; inset:0; z-index:0; pointer-events:none;
+    background:
+      repeating-linear-gradient(to right,
+        rgba(250,249,245,.075) 0 1px, transparent 1px 8.3333%),
+      repeating-linear-gradient(to bottom,
+        rgba(250,249,245,.045) 0 1px, transparent 1px 104px);
+  }
+
+  .proj{position:absolute; inset:0;}
+
+  /* big ghosted numeral behind each project */
+  .proj-ghost{
+    position:absolute; z-index:1; right:calc(var(--gutter) - .04em); bottom:-.16em;
+    font-family:var(--display); font-weight:800; font-size:46vh; line-height:.8;
+    letter-spacing:-.05em; color:transparent;
+    -webkit-text-stroke:1px rgba(250,249,245,.16);
+    pointer-events:none; user-select:none;
+  }
+
+  /* --- project name card --- */
+  .proj-title{
+    position:absolute; inset:0; z-index:5;
+    display:flex; flex-direction:column; justify-content:center;
+    padding:0 var(--gutter); will-change:transform,opacity;
+  }
+  .proj-meta{
+    display:flex; gap:22px; margin-bottom:20px; color:rgba(250,249,245,.62);
+  }
+  .proj-title h3{
+    font-family:var(--display); font-weight:800;
+    font-size:clamp(2.3rem,7.2vw,5.4rem); line-height:.98;
+    letter-spacing:-.038em; margin:0 0 22px; max-width:15ch;
+  }
+  .proj-title p{margin:0; max-width:52ch; font-size:1.06rem; color:rgba(250,249,245,.82);}
+  /* inline code inside a project blurb */
+  .proj-title p code{
+    font-family:ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size:.86em; padding:1px 5px; border-radius:3px;
+    background:rgba(250,249,245,.10); color:var(--dark-ink);
+  }
+  .proj-title p em{font-style:italic;}
+  .proj-tags{display:flex; flex-wrap:wrap; gap:8px; margin-top:26px;}
+  .proj-tags span{
+    font-family:var(--display); font-weight:500; font-size:12px;
+    letter-spacing:.08em; text-transform:uppercase;
+    padding:6px 12px; border:1px solid rgba(250,249,245,.32);
+    color:rgba(250,249,245,.86);
+  }
+
+  /* --- the screenshot stack: paper cards in browser chrome, no backdrop-filter --- */
+  .proj-shots{
+    position:absolute; inset:0; z-index:6;
+    display:flex; align-items:center; justify-content:center;
+    will-change:transform,opacity;
+  }
+  .shot{
+    position:absolute; margin:0;
+    display:flex; flex-direction:column;
+    width:min(920px, 72vw);
+    height:min(580px, 64vh);
+    border-radius:6px; overflow:hidden;
+    background:var(--paper);
+    border:1px solid rgba(250,249,245,.14);
+    box-shadow:0 44px 90px -40px rgba(0,0,0,.95);
+    will-change:transform,opacity;
+  }
+  .shot-bar{
+    flex:0 0 var(--bar); display:flex; align-items:center; gap:7px;
+    padding:0 14px; background:var(--paper-bar);
+    border-bottom:1px solid var(--paper-rule);
+  }
+  .shot-bar i{
+    width:9px; height:9px; border-radius:50%;
+    border:1px solid #B9B5A9; display:block;
+  }
+  .shot-url{
+    margin-left:9px; color:var(--paper-muted);
+    font-family:var(--display); font-weight:500; font-size:12px; letter-spacing:.03em;
+    overflow:hidden; white-space:nowrap; text-overflow:ellipsis;
+  }
+  .shot-body{
+    flex:1 1 auto; position:relative; overflow:hidden;
+    background:
+      repeating-linear-gradient(to right, rgba(10,10,10,.045) 0 1px, transparent 1px 40px),
+      repeating-linear-gradient(to bottom, rgba(10,10,10,.045) 0 1px, transparent 1px 40px),
+      var(--paper);
+  }
+  .shot-body img{
+    position:absolute; inset:0; z-index:1;
+    width:100%; height:100%; display:block;
+    object-fit:cover; object-position:top center;
+  }
+  /* deliberate empty state while the screenshots are missing */
+  .shot figcaption{
+    position:absolute; z-index:0; top:var(--bar); left:0; right:0; bottom:0;
+    display:flex; align-items:center; justify-content:center;
+    font-family:var(--display); font-weight:500; font-size:12px;
+    letter-spacing:.14em; text-transform:uppercase; color:#6B665C;
+  }
+
+  .work-counter{
+    position:absolute; z-index:20; top:78px; right:var(--gutter);
+    font-family:var(--display); font-weight:500; font-size:12px;
+    letter-spacing:.11em; color:rgba(250,249,245,.6);
+  }
+
+  /* ---------- reviews marquee ---------- */
+  .reviews{
+    position:relative; overflow:hidden;
+    background:var(--dark); color:var(--dark-ink);
+    padding:52px 0 58px;
+  }
+  /* same editorial grid as the work stage, so the glass blurs over structure
+     rather than over a flat wash */
+  .reviews::before{
+    content:''; position:absolute; inset:0; z-index:0; pointer-events:none;
+    background:
+      repeating-linear-gradient(to right,
+        rgba(250,249,245,.075) 0 1px, transparent 1px 8.3333%),
+      repeating-linear-gradient(to bottom,
+        rgba(250,249,245,.045) 0 1px, transparent 1px 104px);
+  }
+  .marquee{
+    position:relative; z-index:1; overflow:hidden; padding:9px 0;
+    -webkit-mask-image:linear-gradient(to right, transparent, #000 7%, #000 93%, transparent);
+    mask-image:linear-gradient(to right, transparent, #000 7%, #000 93%, transparent);
+  }
+  .marquee + .marquee{margin-top:18px;}
+  .marquee-track{
+    display:flex; gap:18px; width:max-content; will-change:transform;
+    animation:marquee var(--dur, 78s) linear infinite;
+  }
+  .marquee.rev-rtl .marquee-track{animation-direction:reverse;}
+  .marquee:hover .marquee-track,
+  .marquee:focus-within .marquee-track{animation-play-state:paused;}
+  @keyframes marquee{
+    from{transform:translate3d(0,0,0);}
+    to{transform:translate3d(-50%,0,0);}
+  }
+  .rev{
+    flex:0 0 auto; width:min(430px, 80vw); margin:0;
+    display:flex; flex-direction:column; justify-content:space-between; gap:18px;
+    padding:24px 26px 22px; border-radius:18px;
+    background:rgba(250,249,245,.10);
+    -webkit-backdrop-filter:blur(16px) saturate(160%);
+    backdrop-filter:blur(16px) saturate(160%);
+    border:1px solid rgba(250,249,245,.18);
+    box-shadow:0 14px 36px -20px rgba(0,0,0,.75),
+               inset 0 1px 0 rgba(255,255,255,.09);
+  }
+  .rev blockquote{
+    margin:0; font-size:.98rem; line-height:1.6;
+    color:rgba(250,249,245,.93);
+  }
+  .rev figcaption{display:flex; flex-direction:column; gap:3px;}
+  .rev-name{font-family:var(--display); font-weight:600; font-size:14px;}
+  .rev-meta{
+    font-family:var(--display); font-weight:500; font-size:11.5px;
+    letter-spacing:.09em; text-transform:uppercase; color:rgba(250,249,245,.62);
+  }
+  @media (prefers-reduced-motion:reduce){
+    .marquee-track{animation:none;}
+    .marquee{overflow-x:auto;}
+  }
+
+  /* ---------- contact ---------- */
+  .contact{padding:104px var(--gutter) 40px; border-top:0;}
+  .contact h2{
+    font-family:var(--display); font-weight:800;
+    font-size:clamp(2rem,6.2vw,4.8rem); line-height:1;
+    letter-spacing:-.038em; margin:0 0 12px; max-width:16ch;
+  }
+  .contact-sub{margin:0 0 18px; color:var(--muted); max-width:46ch;}
+  .contact-mail{margin:0 0 44px; font-size:1.06rem; color:var(--muted);}
+  /* the email underline, and its hover */
+  .contact-mail a{
+    color:var(--ink); text-decoration:none;
+    border-bottom:1px solid var(--accent); padding-bottom:2px;
+    transition:color .2s ease;
+  }
+  .contact-mail a:hover{background:#141413; color:#D97757; border-bottom-color:#141413;}
+
+  .cform{
+    display:grid; grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:26px 32px; max-width:780px;
+  }
+  .field{display:flex; flex-direction:column; gap:9px;}
+  .field.span{grid-column:1 / -1;}
+  .field label{color:var(--muted);}
+  .field input, .field select, .field textarea{
+    font-family:var(--body); font-size:1rem; line-height:1.5; color:var(--ink);
+    background:transparent; border:0; border-bottom:1px solid var(--field);
+    border-radius:0; padding:9px 2px;
+    transition:border-color .2s ease;
+  }
+  .field input:focus, .field select:focus, .field textarea:focus{
+    border-color:var(--ink);
+  }
+  .field textarea{border:1px solid var(--field); padding:12px; resize:vertical;}
+  .field select{
+    -webkit-appearance:none; appearance:none; padding-right:22px;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='7'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%23141413' stroke-width='1.5'/%3E%3C/svg%3E");
+    background-repeat:no-repeat; background-position:right 2px center;
+  }
+  .field select option{background:#1E1E1C; color:#FAF9F5;}
+  .cform button{
+    grid-column:1 / -1; justify-self:start;
+    font-family:var(--display); font-weight:600; font-size:13px;
+    letter-spacing:.1em; text-transform:uppercase;
+    color:var(--canvas); background:var(--ink);
+    border:0; border-radius:0; padding:16px 36px; cursor:pointer;
+    transition:background .2s ease;
+  }
+  .cform button:hover{background:#2C2C2A;}
+  @media (max-width:620px){ .cform{grid-template-columns:1fr;} }
+  .form-status{
+    grid-column:1 / -1; margin:0; padding-left:14px;
+    font-size:15px; color:var(--muted); border-left:2px solid var(--rule);
+  }
+  .form-status.ok{color:var(--ink); border-left-color:var(--ink);}
+  .form-status.err{color:#7A2A12; border-left-color:#7A2A12;}
+  .cform button[disabled]{opacity:.55; cursor:default;}
+
+  .colophon{
+    display:flex; flex-wrap:wrap; justify-content:space-between; gap:16px;
+    margin-top:96px; padding-top:20px; border-top:1px solid var(--rule);
+    color:var(--muted);
+  }
+  .colophon a{text-decoration:none;}
+  .colophon a:hover{text-decoration:underline;}
+
+  /* ---------- fallback: no pinning under 760px / reduced motion ---------- */
+  .no-pin .work-track{height:auto !important;}
+  .no-pin .work-stage{position:static; height:auto; overflow:visible; padding:56px 0;}
+  .no-pin .proj{position:relative; inset:auto; opacity:1 !important;
+    visibility:visible !important; margin-bottom:56px;}
+  .no-pin .proj-ghost{display:none;}
+  .no-pin .proj-title{position:relative; inset:auto; transform:none !important;
+    opacity:1 !important; padding:0 var(--gutter) 26px;}
+  .no-pin .proj-shots{position:relative; inset:auto; display:block;
+    transform:none !important; opacity:1 !important; padding:0 var(--gutter);}
+  .no-pin .shot{position:relative; width:100%; height:52vh; min-height:300px;
+    transform:none !important; opacity:1 !important; margin-bottom:16px;}
+  .no-pin .work-counter{display:none;}
+  @media (max-width:620px){ .masthead{padding:10px 8px 10px 18px;} }
+  @media (prefers-reduced-motion:reduce){ .caret{animation:none;} }
+</style>
+</head>
+<body>
+
+<header class="masthead">
+  <a href="#top">Khushpal Singh Chouhan</a>
+  <nav><a href="#work" class="hide-sm">Work</a><a href="#contact">Contact</a></nav>
+</header>
+
+<main id="top">
+
+  <section class="hero">
+    <h1 class="hero-type"><span id="tw">Khushpal Singh Chouhan</span><span class="caret" aria-hidden="true"></span></h1>
+    <p class="hero-pitch">Application security engineer · Pune, working worldwide</p>
+    <div class="hero-foot">
+      <p><strong>I break apps that were shipped fast, before someone less friendly does.</strong> A service key sitting in a JS bundle, a database table anyone can read with the public key, a checkout that trusts whatever price the browser sends &mdash; the bugs that survive every manual test because the happy path works perfectly. I find them, then hand back the fix, not just the finding. Based in Pune, working with clients anywhere &mdash; 17 to date, 10 across India and 7 abroad.</p>
+      <div class="avail label"><i></i> Taking on projects for late 2026</div>
+    </div>
+  </section>
+
+  <div class="section-head"><h2>About</h2><span class="label">01</span></div>
+  <section class="about">
+    <p class="about-lede">I started building because I wanted things to exist that didn't yet. That hasn't changed &mdash; I just got better at shipping them, and at spotting where a thing is about to break. Building fast is easier than it has ever been; the checks that used to come with it are what got skipped. That gap is most of my work now.</p>
+    <ul class="about-list">
+      <li><span>Based in</span><span>Pune, India</span></li>
+      <li><span>Focus</span><span>App security</span></li>
+      <li><span>Also</span><span>Web development</span></li>
+      <li><span>And</span><span>Technical SEO</span></li>
+      <li><span>Plus</span><span>Applied ML</span></li>
+      <li><span>Works in</span><span>Python, Go, JS</span></li>
+      <li><span>Clients</span><span>10 India &middot; 7 abroad</span></li>
+      <li><span>Status</span><span>Available</span></li>
+    </ul>
+  </section>
+
+  <div class="section-head work-head" id="work"><h2>Selected work</h2><span class="label">02</span></div>
+
+  <section class="work-track" id="track">
+    <div class="work-stage" id="stage">
+      <div class="work-counter"><span id="counter">01</span> / <span id="total">3</span></div>
+      <!-- projects are generated from the PROJECTS array below -->
+    </div>
+  </section>
+
+  <div class="section-head"><h2>What clients say</h2><span class="label">03</span></div>
+  <section class="reviews" id="reviews" aria-label="Client reviews">
+    <div class="marquee" id="rev-row-1"><div class="marquee-track"></div></div>
+    <div class="marquee rev-rtl" id="rev-row-2" style="--dur:92s"><div class="marquee-track"></div></div>
+  </section>
+
+  <section class="contact" id="contact">
+    <h2>Have something you want built?</h2>
+    <p class="contact-sub">Tell me what you need and roughly what you have to spend. I reply to everything within a working day.</p>
+    <p class="contact-mail">Or just email me &mdash; <a href="mailto:khushpalkun@gmail.com">khushpalkun@gmail.com</a></p>
+
+    <form class="cform" action="https://formspree.io/f/xppzlkqn" method="POST">
+      <input type="hidden" name="_subject" value="New enquiry from your portfolio">
+      <!-- spam trap: bots fill it, people never see it -->
+      <input type="text" name="_gotcha" tabindex="-1" aria-hidden="true" autocomplete="off" style="display:none">
+      <div class="field">
+        <label class="label" for="f-name">Name</label>
+        <input id="f-name" name="name" type="text" autocomplete="name" required>
+      </div>
+      <div class="field">
+        <label class="label" for="f-email">Email</label>
+        <input id="f-email" name="email" type="email" autocomplete="email" required>
+      </div>
+      <div class="field">
+        <label class="label" for="f-budget">Budget</label>
+        <select id="f-budget" name="budget" required>
+          <option value="">Select a range</option>
+          <option>Under $1,000</option>
+          <option>$1,000 – $5,000</option>
+          <option>$5,000 – $15,000</option>
+          <option>$15,000+</option>
+          <option>Not sure yet</option>
+        </select>
+      </div>
+      <div class="field">
+        <label class="label" for="f-timeline">Timeline</label>
+        <select id="f-timeline" name="timeline">
+          <option value="">No fixed date</option>
+          <option>Within a month</option>
+          <option>1 – 3 months</option>
+          <option>Later this year</option>
+        </select>
+      </div>
+      <div class="field span">
+        <label class="label" for="f-msg">What do you need built?</label>
+        <textarea id="f-msg" name="message" rows="5" required></textarea>
+      </div>
+      <button type="submit">Send enquiry</button>
+      <p class="form-status" id="form-status" role="status" aria-live="polite" hidden></p>
+    </form>
+
+    <div class="colophon label">
+      <span>Khushpal Singh Chouhan — Pune, India</span>
+      <span>
+        <a href="https://github.com/khushpal-cipher" target="_blank" rel="noopener">GitHub</a>
+        &nbsp;·&nbsp;
+        <a href="https://www.linkedin.com/in/khushpal-singh-chouhan/" target="_blank" rel="noopener">LinkedIn</a>
+        &nbsp;·&nbsp;
+        <a href="#top">Back to top</a>
+      </span>
+    </div>
+  </section>
+
+</main>
+
+<script>
+(function () {
+  var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  /* =======================================================================
+     EDIT HERE — one entry per project. "shots" are the page screenshots
+     that stack up. Add or remove freely; the scroll timing adjusts itself.
+     "domain" shows in the browser chrome bar — set it to the live URL once
+     the project ships; until then the card falls back to "slug".
+     ======================================================================= */
+  var PROJECTS = [
+    {
+      name: 'RLS-Sentinel',
+      kind: 'Supabase scanner',
+      year: '2026',
+      domain: '', slug: 'rls-sentinel',
+      blurb: 'Supabase makes it trivial to ship a backend in an afternoon, and just as trivial to leave a table readable by anyone holding the public anon key. RLS-Sentinel probes a project the way an anonymous visitor would and returns each hole with paste-ready SQL to close it. Every probe is a GET: an earlier build dry-ran writes inside <code>Prefer: tx=rollback</code>, and testing against a real project proved Supabase does not honour it — a &ldquo;dry-run&rdquo; DELETE removed a real row. Write risk is now inferred from read exposure and labelled as an advisory, never claimed as verified.',
+      tags: ['React', 'TypeScript', 'FastAPI', 'Tailwind'],
+      shots: [
+        { src: 'screenshots/rls-sentinel-1.png', label: 'Scan' },
+        { src: 'screenshots/rls-sentinel-2.png', label: 'Report' },
+        { src: 'screenshots/rls-sentinel-3.png', label: 'Fix prompts' }
+      ]
+    },
+    {
+      name: 'KeyLeak Scanner',
+      kind: 'Secret scanner',
+      year: '2026',
+      domain: '', slug: 'keyleak-scanner',
+      blurb: 'Reads exactly what a browser downloads — the HTML, every <code>&lt;script src&gt;</code> bundle, and any sourcemap they point at — and hunts for credentials that were never meant to ship. Named regexes catch known key formats with no false positives; Shannon entropy catches the rest, but only within 40 characters of a key/token/secret keyword, which is what keeps minified chunk hashes out of the report. Any JWT decoding to <code>role: service_role</code> outranks everything else: it bypasses Row Level Security entirely.',
+      tags: ['Python', 'FastAPI', 'httpx', 'Jinja2'],
+      shots: [
+        { src: 'screenshots/keyleak-scanner-1.png', label: 'Scan' },
+        { src: 'screenshots/keyleak-scanner-2.png', label: 'Findings' },
+        { src: 'screenshots/keyleak-scanner-3.png', label: 'Detail' }
+      ]
+    },
+    {
+      name: 'AuthFlow-Verifier',
+      kind: 'API auth tester',
+      year: '2026',
+      domain: '', slug: 'authflow-verifier',
+      blurb: '&ldquo;Protected&rdquo; and &ldquo;returns 401 with no token&rdquo; are not the same claim. AuthFlow runs each endpoint twice — once anonymous, once with a real user token — and diffs the status code <em>and</em> the record count. That second axis is the whole point: an inverted policy that hands anonymous callers more rows than the logged-in user still returns 200 to both, so comparing status alone never sees it. Read-only by default; write methods need two independent gates before a single request is sent.',
+      tags: ['Python', 'FastAPI', 'httpx', 'Pydantic'],
+      shots: [
+        { src: 'screenshots/authflow-verifier-1.png', label: 'Spec' },
+        { src: 'screenshots/authflow-verifier-2.png', label: 'Findings' },
+        { src: 'screenshots/authflow-verifier-3.png', label: 'Detail' }
+      ]
+    },
+    {
+      name: 'PaymentGuard',
+      kind: 'Checkout auditor',
+      year: '2026',
+      domain: '', slug: 'paymentguard',
+      blurb: 'Fires two specific attacks at a test-mode Stripe checkout: an order with a tampered price, and three forged webhook variants — no signature, garbage signature, and a well-formed signature signed with the wrong secret. Both bugs survive every manual test, because the happy path works perfectly and nobody hand-tests a forged request. The scope is deliberately narrow and printed on every report, so a PASS is never read as more than it is.',
+      tags: ['Python', 'FastAPI', 'httpx', 'Stripe'],
+      shots: [
+        { src: 'screenshots/paymentguard-1.png', label: 'Check' },
+        { src: 'screenshots/paymentguard-2.png', label: 'Report' },
+        { src: 'screenshots/paymentguard-3.png', label: 'Remediation' }
+      ]
+    },
+    {
+      name: 'AuditReport-Engine',
+      kind: 'Report generator',
+      year: '2026',
+      domain: '', slug: 'auditreport-engine',
+      blurb: 'A pile of JSON findings is not a deliverable — a branded PDF is. Cover, executive summary a founder can read, a scored findings table, per-finding cards pairing plain-English narrative with technical detail, a fix-prompt appendix, and a scope page. Severity comes from a real CVSS 3.1 base-score calculation off the vector string, and the model computes score and severity itself at construction, so no caller can hand it an inconsistent pair. Renders offline and deterministically.',
+      tags: ['Python', 'Pydantic', 'Jinja2', 'WeasyPrint'],
+      shots: [
+        { src: 'screenshots/auditreport-engine-1.png', label: 'Cover' },
+        { src: 'screenshots/auditreport-engine-2.png', label: 'Summary' },
+        { src: 'screenshots/auditreport-engine-3.png', label: 'Findings' }
+      ]
+    }
+  ];
+
+  /* ---------------- typewriter ---------------- */
+  var PHRASES = ['Khushpal Singh Chouhan', 'Security engineer', 'Freelancer'];
+  var out = document.getElementById('tw');
+  var pi = 0, ci = PHRASES[0].length, deleting = true;   /* h1 ships with real text */
+  if (reduce) {
+    out.textContent = PHRASES[0];
+  } else {
+    setTimeout(function tick() {
+      var word = PHRASES[pi];
+      ci += deleting ? -1 : 1;
+      out.textContent = word.slice(0, ci);
+      var wait = deleting ? 34 : 68;
+      if (!deleting && ci === word.length) { wait = 1500; deleting = true; }
+      else if (deleting && ci === 0) { deleting = false; pi = (pi + 1) % PHRASES.length; wait = 380; }
+      setTimeout(tick, wait);
+    }, 1500);
+  }
+
+  /* ---------------- build the project DOM ---------------- */
+  var stage = document.getElementById('stage');
+  var track = document.getElementById('track');
+  var counter = document.getElementById('counter');
+  document.getElementById('total').textContent = ('0' + PROJECTS.length).slice(-2);
+
+  function slugify(s) {
+    return s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+  }
+  function esc(s) {
+    return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;')
+                    .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+
+  var groups = PROJECTS.map(function (p, i) {
+    var el = document.createElement('div');
+    el.className = 'proj';
+
+    var num = ('0' + (i + 1)).slice(-2);
+    var host = p.domain || p.slug || slugify(p.name);
+    var tags = p.tags.map(function (t) { return '<span>' + esc(t) + '</span>'; }).join('');
+    var shots = p.shots.map(function (s) {
+      return '<figure class="shot">' +
+               '<div class="shot-bar"><i></i><i></i><i></i>' +
+                 '<span class="shot-url">' + esc(host) + '/' + esc(slugify(s.label)) + '</span>' +
+               '</div>' +
+               '<div class="shot-body">' +
+                 '<img src="' + esc(s.src) + '" alt="' + esc(p.name + ' — ' + s.label) + '"' +
+                 ' loading="lazy" decoding="async" onerror="this.remove()">' +
+               '</div>' +
+               '<figcaption>' + esc(s.label) + '</figcaption>' +
+             '</figure>';
+    }).join('');
+
+    el.innerHTML =
+      '<span class="proj-ghost" aria-hidden="true">' + num + '</span>' +
+      '<div class="proj-title">' +
+        '<div class="proj-meta label"><span>' + num + '</span><span>' + esc(p.kind) + '</span><span>' + esc(p.year) + '</span></div>' +
+        '<h3>' + esc(p.name) + '</h3>' +
+        '<p>' + p.blurb + '</p>' +
+        '<div class="proj-tags">' + tags + '</div>' +
+      '</div>' +
+      '<div class="proj-shots">' + shots + '</div>';
+
+    stage.appendChild(el);
+    return {
+      root: el,
+      title: el.querySelector('.proj-title'),
+      shotWrap: el.querySelector('.proj-shots'),
+      shots: [].slice.call(el.querySelectorAll('.shot'))
+    };
+  });
+
+  /* ---------------- scroll timeline ----------------
+     Per project:  NAME units for the name, SHOT units per screenshot,
+     then CLEAR units while the stack drops away.                        */
+  var NAME = 1.0, SHOT = 0.9, CLEAR = 0.7;
+
+  var spans = PROJECTS.map(function (p) { return NAME + p.shots.length * SHOT + CLEAR; });
+  var starts = [], acc = 0;
+  spans.forEach(function (s) { starts.push(acc); acc += s; });
+  var TOTAL = acc;
+
+  var vh = window.innerHeight;
+  function pinned() { return !reduce && window.innerWidth >= 760; }
+  function clamp(v) { return v < 0 ? 0 : v > 1 ? 1 : v; }
+  function easeOut(x) { return 1 - Math.pow(1 - x, 3); }
+
+  function layout() {
+    vh = window.innerHeight;
+    if (!pinned()) {
+      document.body.classList.add('no-pin');
+      track.style.height = '';
+      return;
+    }
+    document.body.classList.remove('no-pin');
+    track.style.height = Math.round(vh * (TOTAL + 1)) + 'px';
+    render();
+  }
+
+  function render() {
+    if (!pinned()) return;
+    var scrollable = track.offsetHeight - vh;
+    if (scrollable <= 0) return;
+
+    var p = clamp(-track.getBoundingClientRect().top / scrollable);
+    var t = p * TOTAL;
+
+    var active = 0;
+
+    groups.forEach(function (g, i) {
+      var local = t - starts[i];
+      var span = spans[i];
+
+      // outside this project's window entirely
+      if (local < -0.05 || local > span + 0.05) {
+        g.root.style.opacity = '0';
+        g.root.style.visibility = 'hidden';
+        return;
+      }
+      g.root.style.opacity = '1';
+      g.root.style.visibility = 'visible';
+      if (local >= 0 && local <= span) active = i;
+
+      /* --- name: rises from below, holds, fades out --- */
+      var inP  = easeOut(clamp(local / 0.42));
+      var outP = clamp((local - 0.70) / 0.30);
+      g.title.style.opacity = String(inP * (1 - outP));
+      g.title.style.transform =
+        'translate3d(0,' + ((1 - inP) * 80 - outP * 45).toFixed(1) + 'px,0)';
+
+      /* --- screenshots: rise one by one and stack, offset so edges show --- */
+      var st = local - NAME;
+      g.shots.forEach(function (shot, j) {
+        var e = easeOut(clamp((st - j * SHOT) / SHOT));
+        var rest = -j * 18;                 // each new card sits a little higher
+        var y = (1 - e) * vh * 0.8 + rest;
+        var scale = 0.95 + e * 0.05;
+        shot.style.zIndex = String(j + 1);
+        shot.style.opacity = String(e);
+        shot.style.transform =
+          'translate3d(0,' + y.toFixed(1) + 'px,0) scale(' + scale.toFixed(3) + ')';
+      });
+
+      /* --- clear: the whole stack drops away before the next name --- */
+      var ct = clamp((local - NAME - g.shots.length * SHOT) / CLEAR);
+      g.shotWrap.style.transform = 'translate3d(0,' + (ct * vh * 0.85).toFixed(1) + 'px,0)';
+      g.shotWrap.style.opacity = String(1 - ct);
+    });
+
+    counter.textContent = ('0' + (active + 1)).slice(-2);
+  }
+
+  var queued = false;
+  function onScroll() {
+    if (queued) return;
+    queued = true;
+    requestAnimationFrame(function () { render(); queued = false; });
+  }
+
+  layout();
+  window.addEventListener('scroll', onScroll, { passive: true });
+  window.addEventListener('resize', layout);
+
+  /* ---------------- client reviews ----------------
+     PLACEHOLDER COPY — 17 entries, 10 India / 7 abroad, matching the client
+     counts quoted in the hero and about list. These are invented examples for
+     layout only. Swap each one for a real client quote, with that client’s
+     permission, before this site goes live.                                */
+  var REVIEWS = [
+    { name: 'Rohit Deshmukh', role: 'Dental clinic', place: 'Pune, India',
+      text: 'We used to get maybe two enquiries a week off the old site. Now we sit on the first page for dentist in Kothrud and the phone actually rings. It took about three months to show up properly, but he told us that at the start so we were not sitting there wondering.' },
+    { name: 'James Whitfield', role: 'HVAC company', place: 'Manchester, United Kingdom',
+      text: 'Hired him after two agencies here quoted triple and delivered nothing usable. Site went live in five weeks, we rank across most of our service area now, and the enquiry form works on a phone. That sounds basic. Our last one did not.' },
+    { name: 'Ananya Iyer', role: 'Skincare brand', place: 'Bengaluru, India',
+      text: 'The product pages load properly now and Google finally started showing us for the ingredient searches we care about. Last quarter was up roughly forty percent. I still do not follow all the technical side of it, but the numbers are there.' },
+    { name: 'Vikram Shah', role: 'Textile exporter', place: 'Ahmedabad, India',
+      text: 'Straightforward to work with. He explained why the old site was invisible on search and then fixed the structure instead of just changing the colours. We get international enquiries now, which we never did before.' },
+    { name: 'Wei Ling Tan', role: 'Logistics firm', place: 'Singapore',
+      text: 'Good communication across the time difference, replied to everything inside a day. Organic traffic roughly doubled over six months and we stopped paying for ads on our own company name, which was the thing that annoyed me most.' },
+    { name: 'Meera Nair', role: 'Boutique hotel', place: 'Kochi, India',
+      text: 'Direct bookings went up, which matters to us because we were handing about thirty percent to the aggregators. The site is quick and it looks like the property actually looks, not like a stock photo brochure.' },
+    { name: 'Omar Al Farsi', role: 'Real estate agency', place: 'Dubai, United Arab Emirates',
+      text: 'We needed Arabic and English on one site without the layout falling apart. He handled it properly and we show up in both languages. Delivered on the date he said and the invoice matched the quote, no surprises at the end.' },
+    { name: 'Arjun Malhotra', role: 'Chartered accountancy firm', place: 'New Delhi, India',
+      text: 'I was sceptical about spending on a website for a CA practice. Six months on we get four or five qualified enquiries a month from search alone. It has paid for itself and then some.' },
+    { name: 'Sarah Brennan', role: 'Ceramics studio', place: 'Melbourne, Australia',
+      text: 'I sell online and the old checkout lost people constantly. The new one is fast, my shop pages turn up on Google for the things I actually make, and I can add products myself without emailing anyone to do it for me.' },
+    { name: 'Sneha Kulkarni', role: 'Gym chain', place: 'Nagpur, India',
+      text: 'Three locations, three separate pages, all ranking locally now. Website enquiries went from almost nothing to about twenty a month. He also sat with our front desk staff so they could update the timings themselves.' },
+    { name: 'Priya Raghavan', role: 'Interior design studio', place: 'Chennai, India',
+      text: 'Our portfolio was on a page builder that took eight seconds to load on mobile. He rebuilt it properly and it opens instantly now. Clients actually get through the gallery instead of closing the tab halfway.' },
+    { name: 'Aditya Joshi', role: 'Logistics startup', place: 'Mumbai, India',
+      text: 'We needed a marketing site and a customer tracking portal that shared one login. He scoped it honestly, told us which half to build first, and we shipped in two phases instead of one long expensive one.' },
+    { name: 'Kavita Menon', role: 'Diagnostics lab', place: 'Hyderabad, India',
+      text: 'Patients can download reports themselves now, which cut our front desk calls by about half. He was careful about how the report links work so one patient cannot open another one, which was the part I was worried about.' },
+    { name: 'Harsh Bhatia', role: 'Furniture manufacturer', place: 'Jaipur, India',
+      text: 'Old site had our catalogue as a PDF nobody opened. Now every product has its own page and we turn up on search for the pieces we actually sell. Dealer enquiries are up and most come from outside Rajasthan.' },
+    { name: 'Daniel Okafor', role: 'Accounting practice', place: 'Toronto, Canada',
+      text: 'Clear scope, fixed price, no scope creep invoices at the end. He flagged two things in our old setup that were quietly costing us traffic and fixed both without being asked to pad the bill for it.' },
+    { name: 'Lena Brandt', role: 'B2B software company', place: 'Berlin, Germany',
+      text: 'German and English versions, and the language tags are set up correctly so Google serves the right one. Our previous developer had them pointing at each other wrongly for a year and nobody noticed.' },
+    { name: 'Tom Visser', role: 'Cycling retailer', place: 'Amsterdam, Netherlands',
+      text: 'Store pages load fast on a phone, which matters because most of our customers browse on the train. Checkout drop-off is noticeably lower than the old site. He measured it before and after rather than guessing.' }
+  ];
+
+  function revCard(r, dup) {
+    return '<figure class="rev"' + (dup ? ' aria-hidden="true"' : '') + '>' +
+             '<blockquote>' + esc(r.text) + '</blockquote>' +
+             '<figcaption>' +
+               '<span class="rev-name">' + esc(r.name) + '</span>' +
+               '<span class="rev-meta">' + esc(r.role) + ' &middot; ' + esc(r.place) + '</span>' +
+             '</figcaption>' +
+           '</figure>';
+  }
+
+  [[0, 9, 'rev-row-1'], [9, 17, 'rev-row-2']].forEach(function (row) {
+    var list = REVIEWS.slice(row[0], row[1]);
+    var track = document.querySelector('#' + row[2] + ' .marquee-track');
+    // the set is rendered twice so translateX(-50%) loops seamlessly
+    track.innerHTML = list.map(function (r) { return revCard(r, false); }).join('') +
+                      list.map(function (r) { return revCard(r, true); }).join('');
+  });
+
+  /* ---------------- contact form ----------------
+     Posts to Formspree over fetch so the visitor stays on the page. With JS
+     off the form still submits normally to the same action.                */
+  var form = document.querySelector('.cform');
+  var status = document.getElementById('form-status');
+  var submit = form.querySelector('button[type=submit]');
+
+  form.addEventListener('submit', function (e) {
+    e.preventDefault();
+    submit.disabled = true;
+    status.hidden = false;
+    status.className = 'form-status';
+    status.textContent = 'Sending…';
+
+    fetch(form.action, {
+      method: 'POST',
+      body: new FormData(form),
+      headers: { Accept: 'application/json' }
+    })
+      .then(function (r) {
+        return r.json().catch(function () { return {}; })
+          .then(function (data) { return { ok: r.ok, data: data }; });
+      })
+      .then(function (res) {
+        if (!res.ok) {
+          throw new Error((res.data.errors || []).map(function (x) {
+
+          
+            return x.message;
+          }).join(', ') || 'That didn’t go through.');
+        }
+        form.reset();
+        status.className = 'form-status ok';
+        status.textContent = 'Thanks — that’s with me. I’ll reply within a working day.';
+      })
+      .catch(function (err) {
+        status.className = 'form-status err';
+        status.textContent = err.message.replace(/[.\s]*$/, '') + '. Please try again in a moment.';
+      })
+      .finally(function () { submit.disabled = false; });
+  });
+})();
+</script>
+</body>
+</html>

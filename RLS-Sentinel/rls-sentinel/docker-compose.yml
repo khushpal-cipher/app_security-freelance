@@ -1,0 +1,41 @@
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: rls
+      POSTGRES_PASSWORD: rls
+      POSTGRES_DB: rls_sentinel
+    ports:
+      - "5432:5432"
+    volumes:
+      - rls_sentinel_db:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U rls"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build: ./backend
+    environment:
+      DATABASE_URL: postgresql+psycopg://rls:rls@db:5432/rls_sentinel
+      RATE_LIMIT_RPS: "5"
+      SCAN_REQUEST_RATE_LIMIT: "10/minute"
+      HTTP_TIMEOUT_SECONDS: "10"
+      CORS_ORIGINS: '["http://localhost:5173", "http://localhost:8080"]'
+      LOG_LEVEL: INFO
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "8080:80"
+    depends_on:
+      - backend
+
+volumes:
+  rls_sentinel_db:

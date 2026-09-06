@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card">
+  <p>Scan a public web app for API keys and secrets leaked in its client-side JS bundles and source maps.</p>
+  <form action="/scan/report" method="post">
+    <label for="url">Target URL</label>
+    <input type="url" id="url" name="url" placeholder="https://example.com" required value="{{ prefill_url or '' }}">
+    <button type="submit">Scan</button>
+  </form>
+</div>
+{% if error %}
+<div class="card" style="border-color:#b3261e;color:#b3261e;">{{ error }}</div>
+{% endif %}
+{% endblock %}

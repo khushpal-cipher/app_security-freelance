@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>{{ report.meta.assessment_name }} - {{ report.meta.client_name }}</title>
+<style>{{ css | safe }}</style>
+</head>
+<body>
+
+<div class="cover">
+  <div class="brand">AuditReport-Engine</div>
+  <div class="title-block">
+    <h1>Security Assessment Report</h1>
+    <div class="assessment-name">{{ report.meta.assessment_name }}</div>
+    <div class="assessment-name">{{ report.meta.client_name }}</div>
+    <div class="confidential">Confidential</div>
+  </div>
+  <div class="meta-block">
+    <div>Report Date: {{ report.meta.report_date.strftime('%B %d, %Y') }}</div>
+    <div>Prepared By: {{ report.meta.prepared_by }}</div>
+  </div>
+</div>
+
+<section>
+  <h2>Executive Summary</h2>
+  <div class="risk-statement">{{ report.risk_statement }}</div>
+  <div class="severity-counts">
+    {% for sev in ['critical', 'high', 'medium', 'low'] %}
+    <div class="count-card {{ sev }}">
+      <span class="n">{{ report.counts_by_severity[sev] }}</span>
+      <span class="label">{{ sev }}</span>
+    </div>
+    {% endfor %}
+  </div>
+  {% if not report.findings %}
+  <p>No findings were recorded for this assessment. See the Scope &amp; Limitations
+  page for details on what was tested.</p>
+  {% else %}
+  <p>The table below lists every finding identified during this assessment, ordered
+  by severity. Full technical detail and remediation guidance for each item follows
+  in the sections after.</p>
+  {% endif %}
+</section>
+
+{% if report.findings %}
+<section>
+  <h2>Findings Summary</h2>
+  <table class="findings-table">
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Title</th>
+        <th>Category</th>
+        <th>Severity</th>
+        <th>Score</th>
+        <th>Affected Asset</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for f in report.findings_sorted %}
+      <tr>
+        <td>{{ f.id }}</td>
+        <td>{{ f.title }}</td>
+        <td>{{ f.category }}</td>
+        <td><span class="badge {{ f.severity }}">{{ f.severity }}</span></td>
+        <td>{{ "%.1f"|format(f.cvss_score) }}</td>
+        <td>{{ f.affected_asset }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</section>
+
+<section>
+  <h2>Detailed Findings</h2>
+  {% for f in report.findings_sorted %}
+  <div class="finding-card {{ f.severity }}">
+    <div class="header">
+      <h3>{{ f.id }}: {{ f.title }}</h3>
+      <span class="score"><span class="badge {{ f.severity }}">{{ f.severity }}</span> &nbsp;CVSS {{ "%.1f"|format(f.cvss_score) }}</span>
+    </div>
+    <div class="meta-row">Category: {{ f.category }} &nbsp;|&nbsp; Affected Asset: <code>{{ f.affected_asset }}</code></div>
+
+    <div class="field-label">What This Means (Plain English)</div>
+    <p>{{ f.attacker_narrative }}</p>
+
+    <div class="field-label">Technical Detail</div>
+    <p>{{ f.technical_detail }}</p>
+
+    <div class="field-label">CVSS 3.1 Vector</div>
+    <p><code>{{ f.cvss_vector }}</code></p>
+  </div>
+  {% endfor %}
+</section>
+
+<section>
+  <h2>Appendix: Remediation Fix Prompts</h2>
+  <p>The following prompts can be handed directly to a developer or AI coding
+  assistant to remediate each finding.</p>
+  {% for f in report.findings_sorted %}
+  <div class="fix-prompt-box">
+    <h3>{{ f.id }}: {{ f.title }} <span class="badge {{ f.severity }}">{{ f.severity }}</span></h3>
+    <pre>{{ f.fix_prompt }}</pre>
+  </div>
+  {% endfor %}
+</section>
+{% endif %}
+
+<section>
+  <h2>Scope &amp; Limitations</h2>
+  <div class="scope-columns">
+    <div class="col">
+      <h3>What Was Tested</h3>
+      {% if report.scope.tested %}
+      <ul>{% for item in report.scope.tested %}<li>{{ item }}</li>{% endfor %}</ul>
+      {% else %}
+      <p>No scope items were specified.</p>
+      {% endif %}
+    </div>
+    <div class="col">
+      <h3>What Was Not Tested</h3>
+      {% if report.scope.not_tested %}
+      <ul>{% for item in report.scope.not_tested %}<li>{{ item }}</li>{% endfor %}</ul>
+      {% else %}
+      <p>No exclusions were specified.</p>
+      {% endif %}
+    </div>
+  </div>
+  <div class="disclaimer">{{ report.scope.disclaimer }}</div>
+</section>
+
+</body>
+</html>

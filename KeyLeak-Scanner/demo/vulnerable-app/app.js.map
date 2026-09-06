@@ -1,0 +1,10 @@
+{
+  "version": 3,
+  "file": "app.js",
+  "sources": ["config.js"],
+  "sourcesContent": [
+    "export const stripeSecretKey = 'sk_live_51NfakeDemoKeyDoNotUse00000000000000000000';\nexport const debugToken = 'Zx9qLpT2vR8mK5wN3jH7cF1sB6dY4eA0uV2gI9oP3rQ';\n"
+  ],
+  "names": [],
+  "mappings": "AAAA"
+}
